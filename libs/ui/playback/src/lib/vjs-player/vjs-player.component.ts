@@ -155,9 +155,27 @@ export class VjsPlayerComponent implements OnInit, OnChanges, OnDestroy {
         targetVideo.addEventListener('ended', this.handlePlaybackEnded);
 
         // For raw MPEG-TS streams, init Video.js without a source (UI/controls only)
-        const vjsOptions = isMpegTs
+        const isCatchupUrl =
+            (source?.src.includes('utc=') && source?.src.includes('lutc=')) ??
+            false;
+        const baseOptions = isMpegTs
             ? { ...this.options(), sources: [], autoplay: false }
             : { ...this.options(), autoplay: true };
+        const vjsOptions = isCatchupUrl
+            ? {
+                  ...baseOptions,
+                  liveui: false,
+                  html5: {
+                      ...((baseOptions as Record<string, unknown>)
+                          .html5 as object),
+                      vhs: {
+                          goalBufferLength: 7200,
+                          maxGoalBufferLength: 14400,
+                          backBufferLength: 7200,
+                      },
+                  },
+              }
+            : baseOptions;
 
         this.player = videoJs(this.target().nativeElement, vjsOptions, () => {
             debugVjsPlayer(

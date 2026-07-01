@@ -165,7 +165,16 @@ export class ArtPlayerComponent implements OnInit, OnDestroy, OnChanges {
                         if (this.hls) {
                             this.hls.destroy();
                         }
-                        this.hls = new Hls();
+                        this.hls = new Hls(
+                            url.includes('utc=') && url.includes('lutc=')
+                                ? {
+                                      maxBufferLength: 7200,
+                                      maxMaxBufferLength: 14400,
+                                      backBufferLength: 7200,
+                                      liveDurationInfinity: true,
+                                  }
+                                : {}
+                        );
                         this.hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
                             this.handleHlsManifestParsed(url, data);
                         });

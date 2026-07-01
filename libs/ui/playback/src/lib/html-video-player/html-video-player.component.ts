@@ -229,7 +229,17 @@ export class HtmlVideoPlayerComponent implements OnInit, OnChanges, OnDestroy {
                 Hls.isSupported()
             ) {
                 debugHtmlPlayer('Switching channel to:', channel.name, url);
-                this.hls = new Hls();
+                const isCatchup = url.includes('utc=') && url.includes('lutc=');
+                this.hls = new Hls(
+                    isCatchup
+                        ? {
+                              maxBufferLength: 7200,
+                              maxMaxBufferLength: 14400,
+                              backBufferLength: 7200,
+                              liveDurationInfinity: true,
+                          }
+                        : {}
+                );
                 this.hls.on(Hls.Events.MANIFEST_PARSED, (_, data) => {
                     this.handleHlsManifestParsed(url, data);
                 });
