@@ -30,6 +30,7 @@ const DEFAULT_SETTINGS: Settings = {
     showDashboard: true,
     startupBehavior: StartupBehavior.FirstView,
     showExternalPlaybackBar: true,
+    stripCountryPrefix: false,
     theme: Theme.SystemTheme,
     mpvPlayerPath: '',
     mpvPlayerArguments: '',
@@ -157,6 +158,9 @@ export const SettingsStore = signalStore(
                 showExternalPlaybackBar:
                     store.showExternalPlaybackBar?.() ??
                     DEFAULT_SETTINGS.showExternalPlaybackBar,
+                stripCountryPrefix:
+                    store.stripCountryPrefix?.() ??
+                    DEFAULT_SETTINGS.stripCountryPrefix,
                 theme: store.theme(),
                 mpvPlayerPath: store.mpvPlayerPath(),
                 mpvPlayerArguments: store.mpvPlayerArguments(),
