@@ -537,6 +537,7 @@ async function executeRequest(message: DbWorkerRequestMessage) {
                     password?: string;
                     serverUrl?: string;
                     lastUpdated?: string;
+                    payload?: string;
                 };
             };
             return updatePlaylist(db, payload.playlistId, payload.updates);

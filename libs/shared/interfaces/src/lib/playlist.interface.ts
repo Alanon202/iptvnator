@@ -75,4 +75,6 @@ export interface Playlist {
     };
     /** Hidden M3U group titles for the groups view */
     hiddenGroupTitles?: string[];
+    /** Xtream server timezone, populated from portal account-info response */
+    serverTimezone?: string;
 }

@@ -101,7 +101,8 @@ export class UnifiedLiveCatchupService {
                 credentials,
                 item.xtreamId,
                 startTimestamp,
-                stopTimestamp
+                stopTimestamp,
+                credentials.serverTimezone
             );
             if (!catchupUrl) return null;
             return {
@@ -134,6 +135,7 @@ export class UnifiedLiveCatchupService {
         serverUrl: string;
         username: string;
         password: string;
+        serverTimezone?: string;
     } | null> {
         const electronPlaylist =
             typeof window !== 'undefined'
@@ -158,6 +160,7 @@ export class UnifiedLiveCatchupService {
             serverUrl: playlist.serverUrl,
             username: playlist.username,
             password: playlist.password,
+            serverTimezone: playlist.serverTimezone,
         };
     }
 }

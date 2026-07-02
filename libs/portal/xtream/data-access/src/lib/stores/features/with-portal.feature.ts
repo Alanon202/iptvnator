@@ -129,15 +129,31 @@ export function withPortal() {
                         patchState(store, { portalStatus });
                         const current = store.currentPlaylist();
                         if (current) {
+                            const updates: Partial<XtreamPlaylistData> = {
+                                allowedOutputFormats,
+                                ...(serverTimezone
+                                    ? { serverTimezone }
+                                    : {}),
+                            };
                             patchState(store, {
                                 currentPlaylist: {
                                     ...current,
-                                    allowedOutputFormats,
-                                    ...(serverTimezone
-                                        ? { serverTimezone }
-                                        : {}),
+                                    ...updates,
                                 },
                             });
+                            // Persist serverTimezone and allowedOutputFormats
+                            // so the unified favorites tab can use them for
+                            // catchup URL construction.  The associated data
+                            // source handles the storage strategy (Electron:
+                            // playlist payload; PWA: in-memory store).
+                            await dataSource
+                                .updatePlaylist(current.id, updates)
+                                .catch((error: unknown) => {
+                                    logger.error(
+                                        'Error persisting playlist updates',
+                                        error
+                                    );
+                                });
                         }
                         return portalStatus;
                     } catch (error) {

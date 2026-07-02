@@ -95,12 +95,19 @@ export class ElectronXtreamDataSource implements IXtreamDataSource {
         playlistId: string,
         updates: Partial<XtreamPlaylistData>
     ): Promise<void> {
+        // Build a payload blob so parseAppPlaylist spreads serverTimezone
+        // and allowedOutputFormats into the returned playlist object.
+        const extra: Record<string, unknown> = {};
+        if (updates.serverTimezone) extra.serverTimezone = updates.serverTimezone;
+        if (updates.allowedOutputFormats) extra.allowedOutputFormats = updates.allowedOutputFormats;
+
         await this.dbService.updateXtreamPlaylistDetails({
             id: playlistId,
             title: updates.name,
             username: updates.username,
             password: updates.password,
             serverUrl: updates.serverUrl,
+            payload: Object.keys(extra).length > 0 ? JSON.stringify(extra) : undefined,
         });
     }
 

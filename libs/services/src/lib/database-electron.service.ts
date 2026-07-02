@@ -58,6 +58,7 @@ type XtreamDatabasePlaylistUpdate = {
     password?: string;
     serverUrl?: string;
     lastUpdated?: string;
+    payload?: string;
 };
 
 type XtreamContentStream =
@@ -352,6 +353,7 @@ export class DatabaseService {
         password?: string;
         serverUrl?: string;
         updateDate?: number;
+        payload?: string;
     }): Promise<boolean> {
         try {
             const updates: XtreamDatabasePlaylistUpdate = {};
@@ -363,6 +365,8 @@ export class DatabaseService {
                 updates.lastUpdated = new Date(
                     playlist.updateDate
                 ).toISOString();
+            if (playlist.payload !== undefined)
+                updates.payload = playlist.payload;
 
             await window.electron.dbUpdatePlaylist(playlist.id, updates);
             return true;

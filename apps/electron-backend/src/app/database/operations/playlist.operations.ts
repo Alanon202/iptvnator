@@ -485,11 +485,15 @@ export async function updatePlaylist(
         password?: string;
         serverUrl?: string;
         lastUpdated?: string;
+        payload?: string;
     }
 ): Promise<{ success: boolean }> {
+    const setValues: Record<string, unknown> = { ...updates };
+    // Remove non-column keys before passing to Drizzle; only `payload`
+    // is needed beyond the core columns.
     await db
         .update(schema.playlists)
-        .set(updates)
+        .set(setValues)
         .where(eq(schema.playlists.id, playlistId));
 
     return { success: true };
