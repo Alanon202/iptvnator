@@ -246,6 +246,25 @@ export class EpgListComponent {
         this.timeNow.set(new Date().toISOString());
     }
 
+    /**
+     * Called when the user clicks the archive replay badge on the currently-
+     * airing program card.  Starts the current programme from the beginning
+     * without affecting the card body click behaviour (which stays on live).
+     */
+    onLiveCatchupRequested(program: EpgProgram): void {
+        if (this.isControlled()) {
+            this.programActivated.emit({
+                program,
+                type: 'timeshift',
+            });
+            this.timeNow.set(new Date().toISOString());
+            return;
+        }
+
+        this.store.dispatch(EpgActions.setActiveEpgProgram({ program }));
+        this.timeNow.set(new Date().toISOString());
+    }
+
     activateProgramFromKeyboard(event: Event, program: EpgProgram): void {
         event.preventDefault();
         this.activateProgram(program);
@@ -259,7 +278,13 @@ export class EpgListComponent {
     }
 
     canPlayArchivedProgram(program: EpgProgram): boolean {
-        return this.archivePlaybackEnabled() && this.isProgramArchived(program);
+        if (!this.archivePlaybackEnabled()) {
+            return false;
+        }
+
+        // Show the replay badge on the currently-airing program too so users
+        // can restart the current programme from the beginning.
+        return this.isProgramPlaying(program) || this.isProgramArchived(program);
     }
 
     calculateProgress(program: EpgProgram): number {

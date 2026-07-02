@@ -49,6 +49,9 @@
                                 [showArchiveBadge]="
                                     canPlayArchivedProgram(program)
                                 "
+                                (catchupRequested)="
+                                    onLiveCatchupRequested(program)
+                                "
                             />
                         </div>
                         <div class="program-title">
@@ -93,6 +96,9 @@
                                 [isActive]="isProgramActive(program)"
                                 [showArchiveBadge]="
                                     canPlayArchivedProgram(program)
+                                "
+                                (catchupRequested)="
+                                    onLiveCatchupRequested(program)
                                 "
                             />
                         </div>

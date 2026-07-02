@@ -11,7 +11,13 @@
     <span
         class="archive-playback badge"
         [class.archive-playback--active]="isActive"
+        [class.archive-playback--on-live]="isLive"
         [matTooltip]="'EPG.TIMESHIFT_AVAILABLE' | translate"
+        (click)="onCatchupClick($event)"
+        role="button"
+        tabindex="0"
+        (keydown.enter)="onCatchupClick($event)"
+        (keydown.space)="onCatchupClick($event)"
     >
         <mat-icon class="archive-playback__icon" aria-hidden="true"
             >replay</mat-icon

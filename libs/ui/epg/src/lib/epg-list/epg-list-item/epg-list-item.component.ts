@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, Input } from '@angular/core';
+import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatIcon } from '@angular/material/icon';
 import { MatTooltip } from '@angular/material/tooltip';
@@ -28,6 +28,9 @@ export class EpgListItemComponent {
     /** Whether archive playback is available for the program */
     @Input() showArchiveBadge = false;
 
+    /** Emitted when the user clicks the archive replay badge */
+    @Output() catchupRequested = new EventEmitter<EpgProgram>();
+
     /**
      * Opens the dialog with details about the selected program
      * @param program selected epg program
@@ -37,5 +40,10 @@ export class EpgListItemComponent {
             width: '800px',
             data: program,
         });
+    }
+
+    onCatchupClick(event: Event): void {
+        event.stopPropagation();
+        this.catchupRequested.emit(this.item);
     }
 }
