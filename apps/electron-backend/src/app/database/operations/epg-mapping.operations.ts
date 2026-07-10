@@ -101,6 +101,7 @@ export async function searchEpgChannels(
     limit = 50
 ): Promise<Array<{ id: string; displayName: string; iconUrl: string | null }>> {
     // Escape LIKE wildcards so user input like "HBO%" or "_BC" is literal.
+    // Use sql() + ESCAPE clause — Drizzle's like() does not emit ESCAPE.
     const escaped = searchTerm.trim().replace(/[%_]/g, '\\$&');
     const pattern = `%${escaped}%`;
 
@@ -113,8 +114,8 @@ export async function searchEpgChannels(
         .from(schema.epgChannels)
         .where(
             or(
-                like(schema.epgChannels.displayName, pattern),
-                like(schema.epgChannels.id, pattern)
+                sql`${schema.epgChannels.displayName} LIKE ${pattern} ESCAPE '\\'`,
+                sql`${schema.epgChannels.id} LIKE ${pattern} ESCAPE '\\'`
             )
         )
         .orderBy(schema.epgChannels.displayName)

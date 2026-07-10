@@ -7,7 +7,11 @@ import {
     withState,
 } from '@ngrx/signals';
 import { EpgItem } from '@iptvnator/shared/interfaces';
-import { RuntimeCapabilitiesService, SettingsStore } from '@iptvnator/services';
+import {
+    RuntimeCapabilitiesService,
+    SettingsStore,
+} from '@iptvnator/services';
+import { EpgRuntimeBridgeService } from '@iptvnator/epg/data-access';
 import {
     XtreamApiService,
     XtreamCredentials,
@@ -79,6 +83,7 @@ export function withEpg() {
             const fallbackService = inject(XtreamXmltvFallbackService);
             const runtime = inject(RuntimeCapabilitiesService);
             const settingsStore = inject(SettingsStore);
+            const epgBridge = inject(EpgRuntimeBridgeService);
 
             const supportsEpg = (): boolean => runtime.supportsEpg;
 
@@ -151,20 +156,9 @@ export function withEpg() {
                     // channel key and use the mapped EPG channel ID for the
                     // XMLTV / provider lookup.
                     let epgChannelId = selectedItem?.epg_channel_id ?? null;
-                    const electron = (
-                        window as unknown as {
-                            electron?: {
-                                getEpgMapping?: (
-                                    key: string
-                                ) => Promise<{
-                                    epgChannelId: string;
-                                } | null>;
-                            };
-                        }
-                    ).electron;
-                    if (electron?.getEpgMapping && xtreamId) {
+                    if (epgBridge.supportsEpgMapping && xtreamId) {
                         try {
-                            const mapping = await electron.getEpgMapping(
+                            const mapping = await epgBridge.getEpgMapping(
                                 String(xtreamId)
                             );
                             if (mapping?.epgChannelId?.trim()) {

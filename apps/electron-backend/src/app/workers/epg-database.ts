@@ -13,7 +13,6 @@ export class EpgDatabase {
     private readonly insertProgramStmt: BetterSqlite3.Statement;
     private readonly deleteProgramsForSourceStmt: BetterSqlite3.Statement;
     private readonly deleteOrphanChannelsForSourceStmt: BetterSqlite3.Statement;
-    private readonly deleteTodayAndFutureStmt: BetterSqlite3.Statement;
 
     constructor(Database: typeof BetterSqlite3) {
         this.db = new Database(getIptvnatorDatabasePath());
@@ -65,28 +64,21 @@ export class EpgDatabase {
                   WHERE epg_programs.channel_id = epg_channels.id
               )
         `);
-
-        this.deleteTodayAndFutureStmt = this.db.prepare(`
-            DELETE FROM epg_programs
-            WHERE source_url = ?
-              AND (start >= date('now') OR start < date('now', '-7 days'))
-        `);
     }
 
     /**
-     * Insert a batch of channels. When `clearTodayAndFuture` is true, the
-     * selective delete (today+future and older-than-7-days) runs inside the
-     * same transaction so a parse failure after the delete atomically rolls
-     * back both — no gap left in the schedule.
+     * Insert a batch of channels. When `clearFirst` is true, the existing rows
+     * for `sourceUrl` are deleted inside the same transaction as the insert so
+     * old data is preserved if the fetch/parse never produces any channels.
      */
     insertChannels(
         channels: ParsedChannel[],
         sourceUrl: string,
-        clearTodayAndFuture = false
+        clearFirst = false
     ): void {
         const insertMany = this.db.transaction((channels: ParsedChannel[]) => {
-            if (clearTodayAndFuture) {
-                this.deleteTodayAndFutureStmt.run(sourceUrl);
+            if (clearFirst) {
+                this.deleteProgramsForSourceStmt.run(sourceUrl);
                 this.deleteOrphanChannelsForSourceStmt.run(sourceUrl);
                 this.knownChannelIds.clear();
             }
@@ -150,14 +142,6 @@ export class EpgDatabase {
 
         insertMany(programs);
         return insertedCount;
-    }
-
-    deleteTodayAndFuturePrograms(sourceUrl: string): void {
-        try {
-            this.deleteTodayAndFutureStmt.run(sourceUrl);
-        } catch {
-            // Non-fatal; best-effort cleanup.
-        }
     }
 
     close(): void {

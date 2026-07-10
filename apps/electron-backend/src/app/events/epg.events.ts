@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { ipcMain } from 'electron';
 import {
     ElectronBridgeTrustOptions,
@@ -449,6 +449,8 @@ export default class EpgEvents {
     /**
      * Batch-resolve multiple channel IDs through manual mappings.
      * Returns a Map of original ID → mapped ID (identity when no mapping).
+     * Falls back to Xtream epg_channel_id → xtream_id resolution for any
+     * keys that did not match a direct mapping entry.
      */
     private static async resolveChannelIds(
         channelIds: string[]
@@ -456,6 +458,39 @@ export default class EpgEvents {
         try {
             const db = await getDatabase();
             const mappings = await getEpgMappingsBatch(db, channelIds);
+
+            // Xtream fallback: for unresolved keys that match a content row's
+            // epg_channel_id, look for a mapping saved under the xtream_id.
+            const unresolved = channelIds.filter((id) => !mappings.has(id));
+            if (unresolved.length === 0) return mappings;
+
+            const rows = await db
+                .select({
+                    epgChannelId: schema.content.epgChannelId,
+                    xtreamId: schema.content.xtreamId,
+                })
+                .from(schema.content)
+                .where(
+                    inArray(schema.content.epgChannelId, unresolved)
+                );
+
+            const xtreamIds = rows
+                .map((r) => String(r.xtreamId))
+                .filter(Boolean);
+            if (xtreamIds.length === 0) return mappings;
+
+            const xtreamMappings = await getEpgMappingsBatch(
+                db,
+                xtreamIds
+            );
+            for (const row of rows) {
+                const id = String(row.xtreamId);
+                const mapped = xtreamMappings.get(id);
+                if (mapped && row.epgChannelId) {
+                    mappings.set(row.epgChannelId, mapped);
+                }
+            }
+
             return mappings;
         } catch {
             return new Map();
