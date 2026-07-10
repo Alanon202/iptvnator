@@ -258,9 +258,10 @@ export class GridListComponent {
     );
     protected readonly channelTitle = (item: GridListItem): string => {
         const raw = item.title ?? item.o_name ?? item.name ?? '';
-        return raw && this.settingsStore.stripCountryPrefix?.()
+        const stripped = raw && this.settingsStore.stripCountryPrefix?.()
             ? stripCountryPrefix(raw)
-            : raw || 'No name';
+            : raw;
+        return stripped || 'No name';
     };
 
     readonly skeletonRows = computed(() => {

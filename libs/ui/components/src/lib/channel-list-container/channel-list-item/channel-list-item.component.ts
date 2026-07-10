@@ -3,6 +3,7 @@ import { DatePipe, NgStyle } from '@angular/common';
 import {
     ChangeDetectionStrategy,
     Component,
+    computed,
     effect,
     inject,
     input,
@@ -17,7 +18,6 @@ import { TranslatePipe } from '@ngx-translate/core';
 import { EpgItemDescriptionComponent } from '@iptvnator/ui/epg';
 import { EpgProgram } from '@iptvnator/shared/interfaces';
 import { SettingsStore } from '@iptvnator/services';
-import { computed } from '@angular/core';
 import { stripCountryPrefix } from '@iptvnator/shared/m3u-utils';
 
 @Component({

@@ -1,4 +1,4 @@
-const SEPARATORS = [' | ', '| ', ' |', ' - ', '- ', ' -'];
+const SEPARATORS = [' | ', '| ', ' |', '|', ' - ', '- ', ' -'];
 
 /**
  * Strip country / group prefixes from channel names.
