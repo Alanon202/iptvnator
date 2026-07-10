@@ -31,10 +31,17 @@ export class EpgDatabase {
                 updated_at = strftime('%Y-%m-%dT%H:%M:%SZ', 'now')
         `);
 
-        // Guard against duplicate entries when the clearFirst logic misses old
-        // rows (e.g. because the source URL changed between imports).  The same
-        // channel + start + title is treated as the same programme — a later
-        // import with a corrected stop time simply replaces the earlier row.
+        // Delete duplicate (channel_id, start, title) rows before creating
+        // the unique index — multi-source setups may already have dupes from
+        // overlapping feeds, and CREATE UNIQUE INDEX would throw on them.
+        this.db.prepare(`
+            DELETE FROM epg_programs
+            WHERE rowid NOT IN (
+              SELECT MIN(rowid) FROM epg_programs
+              GROUP BY channel_id, start, title
+            )
+        `).run();
+
         this.db.prepare(`
             CREATE UNIQUE INDEX IF NOT EXISTS idx_epg_programs_dedup
             ON epg_programs(channel_id, start, title)
