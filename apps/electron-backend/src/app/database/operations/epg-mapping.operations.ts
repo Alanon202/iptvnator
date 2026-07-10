@@ -1,4 +1,4 @@
-import { and, eq, inArray, like, or, sql } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import * as schema from '@iptvnator/shared/database/schema';
 import type { AppDatabase } from '../database.types';
 
@@ -101,7 +101,6 @@ export async function searchEpgChannels(
     limit = 50
 ): Promise<Array<{ id: string; displayName: string; iconUrl: string | null }>> {
     // Escape LIKE wildcards so user input like "HBO%" or "_BC" is literal.
-    // Use sql() + ESCAPE clause — Drizzle's like() does not emit ESCAPE.
     const escaped = searchTerm.trim().replace(/[%_]/g, '\\$&');
     const pattern = `%${escaped}%`;
 

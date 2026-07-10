@@ -152,14 +152,6 @@ export class EpgDatabase {
         return insertedCount;
     }
 
-    deleteTodayAndFuturePrograms(sourceUrl: string): void {
-        try {
-            this.deleteTodayAndFutureStmt.run(sourceUrl);
-        } catch {
-            // Non-fatal; best-effort cleanup.
-        }
-    }
-
     close(): void {
         this.db.close();
     }
