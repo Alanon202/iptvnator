@@ -220,7 +220,8 @@ export class UnifiedLiveTabComponent {
      * programmes older than the real archive window.
      *
      * M3U: reads catchup-days / timeshift / tvg-rec from the channel attrs.
-     * Portal: tvArchiveDuration is stored in hours — convert to days.
+     * Portal: uses the raw tv_archive_duration from the Xtream provider,
+     * matching the live-stream-layout component's controlledArchiveDays.
      */
     readonly timelineArchiveDays = computed(() => {
         if (!this.timelineArchiveAvailable()) return 0;
@@ -229,9 +230,7 @@ export class UnifiedLiveTabComponent {
             return getM3uArchiveDays(this.currentM3uChannel());
         }
 
-        // Portal: tvArchiveDuration is in hours — divide by 24 for days.
-        const hours = Number(this.activeItem()?.tvArchiveDuration ?? 0);
-        return Math.max(1, Math.ceil(hours / 24));
+        return Math.max(1, Number(this.activeItem()?.tvArchiveDuration ?? 0));
     });
     readonly activeRadioChannel = computed(() => {
         const channel = this.activeDetail()?.channel ?? null;
