@@ -62,7 +62,7 @@ export class EpgDatabase {
         this.deleteTodayAndFutureStmt = this.db.prepare(`
             DELETE FROM epg_programs
             WHERE source_url = ?
-              AND start >= date('now')
+              AND (start >= date('now') OR start < date('now', '-7 days'))
         `);
     }
 
