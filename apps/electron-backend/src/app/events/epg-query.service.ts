@@ -549,7 +549,7 @@ export class EpgQueryService {
                     sourceUrls
                 )
             )
-            .orderBy(sql`${schema.epgPrograms.start} DESC`)
+            .orderBy(schema.epgPrograms.start)
             .limit(500);
     }
 
@@ -572,7 +572,7 @@ export class EpgQueryService {
                     { legacyOnly: true }
                 )
             )
-            .orderBy(sql`${schema.epgPrograms.start} DESC`)
+            .orderBy(schema.epgPrograms.start)
             .limit(500);
     }
 

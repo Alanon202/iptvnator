@@ -106,6 +106,13 @@ export default class EpgEvents {
                 const options =
                     typeof args === 'string' ? undefined : args.options;
                 epgWorkerService.deleteFetchedUrl(url);
+                epgWorkerService.sendProgressToRenderer(
+                    url,
+                    'queued',
+                    undefined,
+                    undefined,
+                    1
+                );
                 try {
                     await this.fetchEpgFromUrl(url, options);
                     return { success: true };

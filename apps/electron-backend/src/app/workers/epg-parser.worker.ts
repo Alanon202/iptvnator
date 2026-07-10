@@ -106,7 +106,7 @@ async function fetchAndParseEpgStreaming(
 
     // Create database connection in worker
     const epgDb = new EpgDatabase(Database);
-    let hasClearedCurrent = false;
+    let needsClear = true;
 
     try {
         // EPG URLs can originate from an untrusted M3U `url-tvg` attribute.
@@ -166,11 +166,9 @@ async function fetchAndParseEpgStreaming(
                 // On the first channel batch, delete programmes starting today
                 // or later so the incoming XMLTV replaces the current/future
                 // schedule without touching yesterday's archive data.
-                if (!hasClearedCurrent) {
-                    hasClearedCurrent = true;
-                    epgDb.deleteTodayAndFuturePrograms(url);
-                }
-                epgDb.insertChannels(channels, url, false);
+                const clearToday = needsClear;
+                needsClear = false;
+                epgDb.insertChannels(channels, url, clearToday);
             },
             (programs) => {
                 // Insert programs directly into database

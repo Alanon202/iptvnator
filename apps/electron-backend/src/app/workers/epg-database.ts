@@ -67,18 +67,19 @@ export class EpgDatabase {
     }
 
     /**
-     * Insert a batch of channels. When `clearFirst` is true, the existing rows
-     * for `sourceUrl` are deleted inside the same transaction as the insert so
-     * old data is preserved if the fetch/parse never produces any channels.
+     * Insert a batch of channels. When `clearTodayAndFuture` is true, the
+     * selective delete (today+future and older-than-7-days) runs inside the
+     * same transaction so a parse failure after the delete atomically rolls
+     * back both — no gap left in the schedule.
      */
     insertChannels(
         channels: ParsedChannel[],
         sourceUrl: string,
-        clearFirst = false
+        clearTodayAndFuture = false
     ): void {
         const insertMany = this.db.transaction((channels: ParsedChannel[]) => {
-            if (clearFirst) {
-                this.deleteProgramsForSourceStmt.run(sourceUrl);
+            if (clearTodayAndFuture) {
+                this.deleteTodayAndFutureStmt.run(sourceUrl);
                 this.deleteOrphanChannelsForSourceStmt.run(sourceUrl);
                 this.knownChannelIds.clear();
             }
