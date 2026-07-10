@@ -106,11 +106,7 @@ async function fetchAndParseEpgStreaming(
 
     // Create database connection in worker
     const epgDb = new EpgDatabase(Database);
-
-    // Old rows for this source are never cleared: the INSERT OR REPLACE
-    // strategy keeps existing entries up to date while preserving programmes
-    // from prior imports that the latest feed may no longer cover (e.g.
-    // older days needed for catch-up).
+    let hasClearedCurrent = false;
 
     try {
         // EPG URLs can originate from an untrusted M3U `url-tvg` attribute.
@@ -167,11 +163,13 @@ async function fetchAndParseEpgStreaming(
 
         const parser = new StreamingEpgParser(
             (channels) => {
-                // Insert channels and their programs without clearing old data,
-                // so programmes from previous EPG imports (e.g. past days not
-                // covered by the latest feed) are preserved for catch-up use.
-                // INSERT OR REPLACE on duplicate (channel_id, start, title)
-                // keeps existing entries up to date.
+                // On the first channel batch, delete programmes starting today
+                // or later so the incoming XMLTV replaces the current/future
+                // schedule without touching yesterday's archive data.
+                if (!hasClearedCurrent) {
+                    hasClearedCurrent = true;
+                    epgDb.deleteTodayAndFuturePrograms(url);
+                }
                 epgDb.insertChannels(channels, url, false);
             },
             (programs) => {

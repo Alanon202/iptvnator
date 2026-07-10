@@ -13,6 +13,7 @@ export class EpgDatabase {
     private readonly insertProgramStmt: BetterSqlite3.Statement;
     private readonly deleteProgramsForSourceStmt: BetterSqlite3.Statement;
     private readonly deleteOrphanChannelsForSourceStmt: BetterSqlite3.Statement;
+    private readonly deleteTodayAndFutureStmt: BetterSqlite3.Statement;
 
     constructor(Database: typeof BetterSqlite3) {
         this.db = new Database(getIptvnatorDatabasePath());
@@ -56,6 +57,12 @@ export class EpgDatabase {
                   FROM epg_programs
                   WHERE epg_programs.channel_id = epg_channels.id
               )
+        `);
+
+        this.deleteTodayAndFutureStmt = this.db.prepare(`
+            DELETE FROM epg_programs
+            WHERE source_url = ?
+              AND start >= date('now')
         `);
     }
 
@@ -135,6 +142,14 @@ export class EpgDatabase {
 
         insertMany(programs);
         return insertedCount;
+    }
+
+    deleteTodayAndFuturePrograms(sourceUrl: string): void {
+        try {
+            this.deleteTodayAndFutureStmt.run(sourceUrl);
+        } catch {
+            // Non-fatal; best-effort cleanup.
+        }
     }
 
     close(): void {
