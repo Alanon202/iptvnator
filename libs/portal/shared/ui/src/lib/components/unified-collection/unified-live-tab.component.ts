@@ -479,8 +479,10 @@ export class UnifiedLiveTabComponent {
             startEpoch,
             stopEpoch
         );
-        if (!playbackUrl || requestId !== this.selectionRequestId) {
-            if (playbackUrl) return; // switched channel, no feedback needed
+        if (requestId !== this.selectionRequestId) {
+            return; // switched channel — discard silently
+        }
+        if (!playbackUrl) {
             this.snackBar.open(
                 this.translate.instant('EPG.TIMELINE.CATCHUP_FAILED'),
                 undefined,
