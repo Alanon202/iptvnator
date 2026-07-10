@@ -18,7 +18,6 @@ import {
     getM3uArchiveDays,
     isM3uCatchupPlaybackSupported,
     resolveM3uCatchupUrl,
-    stripCountryPrefix,
 } from '@iptvnator/shared/m3u-utils';
 import {
     DEFAULT_FAVORITES_CHANNEL_SORT_MODE,
@@ -48,6 +47,7 @@ import {
 import {
     getLiveEpgPanelSummary,
     toEpgProgram,
+    toEpochSeconds,
     toLiveEpgPanelSummary,
 } from './unified-live-epg-summary.util';
 import { GlobalFavoritesListComponent } from '../global-favorites-list/global-favorites-list.component';
@@ -188,15 +188,12 @@ export class UnifiedLiveTabComponent {
             ? this.currentM3uPrograms()
             : this.currentPortalEpgPrograms()
     );
-    readonly timelineChannelName = computed(() => {
-        const raw =
+    readonly timelineChannelName = computed(
+        () =>
             this.currentM3uChannel()?.name ??
             this.activeDetail()?.playback?.title ??
-            '';
-        return raw && this.settingsStore.stripCountryPrefix?.()
-            ? stripCountryPrefix(raw)
-            : raw;
-    });
+            ''
+    );
     readonly timelineChannelLogo = computed(
         () =>
             this.currentM3uChannel()?.tvg?.logo ??
@@ -449,6 +446,7 @@ export class UnifiedLiveTabComponent {
      * resolve via the provider's timeshift endpoint.
      */
     private async activatePortalCatchup(program: EpgProgram): Promise<void> {
+        const requestId = this.selectionRequestId;
         const item = this.activeItem();
         if (!item?.xtreamId) {
             this.snackBar.open(
@@ -459,15 +457,20 @@ export class UnifiedLiveTabComponent {
             return;
         }
 
-        const startEpoch = this.toEpochSeconds(
+        const startEpoch = toEpochSeconds(
             program.startTimestamp,
             program.start
         );
-        const stopEpoch = this.toEpochSeconds(
+        const stopEpoch = toEpochSeconds(
             program.stopTimestamp,
             program.stop
         );
         if (startEpoch == null || stopEpoch == null) {
+            this.snackBar.open(
+                this.translate.instant('EPG.TIMELINE.CATCHUP_FAILED'),
+                undefined,
+                { duration: 4000 }
+            );
             return;
         }
 
@@ -476,7 +479,8 @@ export class UnifiedLiveTabComponent {
             startEpoch,
             stopEpoch
         );
-        if (!playbackUrl) {
+        if (!playbackUrl || requestId !== this.selectionRequestId) {
+            if (playbackUrl) return; // switched channel, no feedback needed
             this.snackBar.open(
                 this.translate.instant('EPG.TIMELINE.CATCHUP_FAILED'),
                 undefined,
@@ -495,22 +499,6 @@ export class UnifiedLiveTabComponent {
                 isLive: false,
             });
         }
-    }
-
-    /**
-     * Convert program start/stop to epoch seconds, preferring the
-     * numeric timestamp (which is provider-native) over the ISO string.
-     */
-    private toEpochSeconds(
-        timestamp: number | null | undefined,
-        fallbackIso: string
-    ): number | null {
-        if (timestamp != null && Number.isFinite(timestamp)) {
-            return timestamp;
-        }
-
-        const ms = Date.parse(fallbackIso);
-        return Number.isFinite(ms) ? Math.floor(ms / 1000) : null;
     }
 
     returnToLivePlayback(): void {

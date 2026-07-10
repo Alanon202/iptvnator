@@ -58,7 +58,9 @@ export interface UnifiedCollectionItem {
 
     /** Whether the Xtream provider has timeshift / archive enabled for this stream */
     tvArchive?: number | null;
-    /** Timeshift / archive window in hours (Xtream) */
+    /** Timeshift / archive window in days (Xtream `tv_archive_duration`).
+     *  Treat as days — consistent with how `live-stream-layout` exposes it
+     *  via `controlledArchiveDays`. */
     tvArchiveDuration?: number | null;
 
     /** Stalker cmd for stream resolution */
